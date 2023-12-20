@@ -116,6 +116,11 @@ plotmeans(d30_rev_denoised ~ interaction(test_bucket, sep ="   "),
 data$action2 <- as.factor(data$action2)
 data$treatment_group <- ordered(data$action2,
                         levels = c("2.99 USD", "4.99 USD", "29.99 USD", "Control"))
+str(data$treatment_group)
+# How many and what share of users are in each treatment group?
+summary(data$treatment_group) 
+'2.99 USD  4.99 USD 29.99 USD   Control 
+72407     72852     72671    145510 '
 
 plotmeans(d30_rev_denoised ~ interaction(treatment_group, sep ="   "),
           connect=list(1:4),
@@ -205,6 +210,7 @@ Multiple R-squared:  0.00231,	Adjusted R-squared:  0.0023
 F-statistic:  840 on 1 and 363438 DF,  p-value: <2e-16'
 
 # for every one gb increase in ram, the revenue increase by 1.14 usd.
+
 install.packages("fastDummies")
 library(fastDummies)
 data <- dummy_cols(data, select_columns = "country_tier")
@@ -235,13 +241,23 @@ tier3_countries <- unique(data %>%
                             pull(country))
 tier3_countries
 
-dependency <- c(data$`country_tier_Country tier 1`,
-                data$`country_tier_Country tier 2`,
-                data$`country_tier_Country tier 3`,
-                data$`country_tier_Country tier 4`,
-                data$`country_tier_Country tier 5`,
-                as.integer(data$device_ram))
-cor_data <- df[dependency]
+data <- dummy_cols(data, select_columns = "device_tier")
+lm_treat_dv = lm(d30_rev_denoised ~ data$`device_tier_Android tier 1`
+                   + `device_tier_Android tier 2`
+                   + `device_tier_Android tier 3`
+                   + `device_tier_Android tier 4`
+                   + `device_tier_Android tier 5`, data = data)
+summary(lm_treat_dv)
+
+# select variables used in analysis for heatmap
+cor_vars <- c(data$`country_tier_Country tier 1`,
+              data$`country_tier_Country tier 2`,
+              data$`country_tier_Country tier 3`,
+              data$`device_tier_Android tier 1`
+              , data$`device_tier_Android tier 2`
+              , data$`device_tier_Android tier 3`)
+
+cor_data <- data[cor_vars]
 
 # create correlation matrix
 # fill all missings with 0 to allow for correlation calculation
@@ -272,3 +288,5 @@ cor_heat <- ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
                                    size = 12, hjust = 1))+
   theme(axis.text.y = element_text(size = 12))+
   coord_fixed()
+
+cor_heat

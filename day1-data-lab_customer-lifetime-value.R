@@ -190,3 +190,5 @@ rf_x2_plot2 <- ggplot(rf_x2_par2, aes(x=count_p_1, y=sum_p_6, z=yhat)) +
   #ylim(0,10) +
   xlab("Count P1") +
   ylab("Sum P6")
+
+rf_x2_plot2
